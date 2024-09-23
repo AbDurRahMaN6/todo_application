@@ -10,10 +10,9 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState(null);
 
-  const [page, setPage] = useState(0);               // Pagination state
-  const [rowsPerPage, setRowsPerPage] = useState(8); // Max rows per page
+  const [page, setPage] = useState(0);               
+  const [rowsPerPage, setRowsPerPage] = useState(8); 
 
-  // Open the delete confirmation dialog
   const handleOpenDialog = (todo) => {
     setSelectedTodo(todo);
     setOpenDialog(true);
@@ -45,12 +44,10 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
     setEditTodoId(null);
   };
 
-  // Handle pagination page change
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  // Handle rows per page change
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
@@ -78,7 +75,6 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {/* Paginate Todos */}
               {todos.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((todo) => (
                 <TableRow key={todo.id}>
                   <TableCell>
@@ -110,7 +106,7 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
                         color: 'white',
                         '&:hover': { backgroundColor: todo.completed ? green[700] : yellow[700] }
                       }}
-                      disabled={editTodoId === todo.id} // Disable status change if editing
+                      disabled={editTodoId === todo.id} 
                     >
                       {todo.completed ? 'Completed' : 'Incomplete'}
                     </Button>
@@ -140,7 +136,7 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
                         <IconButton
                           color="success"
                           onClick={() => handleEditClick(todo)}
-                          disabled={todo.completed} // Disable editing if todo is completed
+                          disabled={todo.completed} 
                         >
                           <EditIcon />
                         </IconButton>
@@ -157,7 +153,6 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
               ))}
             </TableBody>
           </Table>
-          {/* Pagination */}
           <TablePagination
             rowsPerPageOptions={[5, 8, 10]}
             component="div"
@@ -170,7 +165,6 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
         </TableContainer>
       )}
 
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={openDialog}
         onClose={handleCloseDialog}
