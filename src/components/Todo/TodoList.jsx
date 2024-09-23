@@ -1,34 +1,19 @@
 import React, { useState } from 'react';
-import {
-  Box,
-  Button,
-  IconButton,
-  Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from '@mui/material';
+import { Box, Button, IconButton, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Typography, TablePagination } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { green, grey, yellow } from '@mui/material/colors';
 
 const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
+  const [editTodoId, setEditTodoId] = useState(null);
+  const [editTodo, setEditTodo] = useState({ title: '', description: '' });
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedTodo, setSelectedTodo] = useState(null);
-  const [editTodo, setEditTodo] = useState(null); 
-  const [editedTitle, setEditedTitle] = useState(''); 
-  const [editedDescription, setEditedDescription] = useState('');
 
+  const [page, setPage] = useState(0);               // Pagination state
+  const [rowsPerPage, setRowsPerPage] = useState(8); // Max rows per page
+
+  // Open the delete confirmation dialog
   const handleOpenDialog = (todo) => {
     setSelectedTodo(todo);
     setOpenDialog(true);
@@ -46,122 +31,150 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
     }
   };
 
-  const handleEdit = (todo) => {
-    setEditTodo(todo);
-    setEditedTitle(todo.title);
-    setEditedDescription(todo.description);
+  const handleEditClick = (todo) => {
+    setEditTodoId(todo.id);
+    setEditTodo({ title: todo.title, description: todo.description });
   };
 
-  const handleCancelEdit = () => {
-    setEditTodo(null);
-    setEditedTitle('');
-    setEditedDescription('');
+  const handleUpdateClick = (id) => {
+    onUpdate({ ...editTodo, id });
+    setEditTodoId(null);
   };
 
-  const handleUpdateTodo = () => {
-    if (editTodo) {
-      onUpdate({ ...editTodo, title: editedTitle, description: editedDescription });
-      handleCancelEdit();
-    }
+  const handleCancelClick = () => {
+    setEditTodoId(null);
+  };
+
+  // Handle pagination page change
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  // Handle rows per page change
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   return (
     <>
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell><Typography variant="h6">Title</Typography></TableCell>
-              <TableCell><Typography variant="h6">Description</Typography></TableCell>
-              <TableCell><Typography variant="h6">Status</Typography></TableCell>
-              <TableCell><Typography variant="h6">Actions</Typography></TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {todos.map((todo) => (
-              <TableRow key={todo.id}>
-                <TableCell>
-                  {editTodo && editTodo.id === todo.id ? (
-                    <TextField
-                      value={editedTitle}
-                      onChange={(e) => setEditedTitle(e.target.value)}
-                      fullWidth
-                    />
-                  ) : (
-                    todo.title
-                  )}
-                </TableCell>
-                <TableCell>
-                  {editTodo && editTodo.id === todo.id ? (
-                    <TextField
-                      value={editedDescription}
-                      onChange={(e) => setEditedDescription(e.target.value)}
-                      fullWidth
-                    />
-                  ) : (
-                    todo.description
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="contained"
-                    onClick={() => onToggleComplete(todo.id)}
-                    sx={{
-                      backgroundColor: todo.completed ? grey[500] : yellow[500],
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: todo.completed ? grey[700] : yellow[700],
-                      },
-                    }}
-                  >
-                    {todo.completed ? 'Completed' : 'Incomplete'}
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  {editTodo && editTodo.id === todo.id ? (
-                    <>
-                      <Button
-                        variant="contained"
-                        color="success"
-                        onClick={handleUpdateTodo}
-                        sx={{ mr: 2 }}
-                      >
-                        Update
-                      </Button>
-                      <Button
-                        variant="contained"
-                        color="inherit"
-                        onClick={handleCancelEdit}
-                        sx={{ backgroundColor: grey[500], color: 'white' }}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <>
-                      <IconButton
-                        color="success"
-                        onClick={() => handleEdit(todo)}
-                        disabled={todo.completed} 
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleOpenDialog(todo)}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </>
-                  )}
-                </TableCell>
+      {todos.length === 0 ? (
+        <Typography variant="h1" align='center' color="textSecondary" sx={{ mt: 4 }}>
+          No items available.
+        </Typography>
+      ) : (
+        <TableContainer component={Paper} sx={{ mt: 4, mb: 4 }}>
+          <Typography variant="h1" align='center' color="textSecondary" sx={{ mt: 4 }}>
+          Items List
+        </Typography>
+          <Table>
+            <TableHead>
+              <TableRow>
+                
+                <TableCell><Typography variant="h6">Title</Typography></TableCell>
+                <TableCell><Typography variant="h6">Description</Typography></TableCell>
+                <TableCell><Typography variant="h6">Status</Typography></TableCell>
+                <TableCell><Typography variant="h6">Actions</Typography></TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {/* Paginate Todos */}
+              {todos.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map((todo) => (
+                <TableRow key={todo.id}>
+                  <TableCell>
+                    {editTodoId === todo.id ? (
+                      <TextField
+                        value={editTodo.title}
+                        onChange={(e) => setEditTodo({ ...editTodo, title: e.target.value })}
+                      />
+                    ) : (
+                      todo.title
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {editTodoId === todo.id ? (
+                      <TextField
+                        value={editTodo.description}
+                        onChange={(e) => setEditTodo({ ...editTodo, description: e.target.value })}
+                      />
+                    ) : (
+                      todo.description
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="contained"
+                      onClick={() => onToggleComplete(todo.id)}
+                      sx={{
+                        backgroundColor: todo.completed ? green[500] : yellow[500],
+                        color: 'white',
+                        '&:hover': { backgroundColor: todo.completed ? green[700] : yellow[700] }
+                      }}
+                      disabled={editTodoId === todo.id} // Disable status change if editing
+                    >
+                      {todo.completed ? 'Completed' : 'Incomplete'}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    {editTodoId === todo.id ? (
+                      <>
+                        <Button
+                          variant="contained"
+                          color="success"
+                          onClick={() => handleUpdateClick(todo.id)}
+                          sx={{ mr: 1 }}
+                        >
+                          Update
+                        </Button>
+                        <Button
+                          variant="contained"
+                          color="inherit"
+                          onClick={handleCancelClick}
+                          sx={{ backgroundColor: grey[500], color: 'white' }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <IconButton
+                          color="success"
+                          onClick={() => handleEditClick(todo)}
+                          disabled={todo.completed} // Disable editing if todo is completed
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => handleOpenDialog(todo)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          {/* Pagination */}
+          <TablePagination
+            rowsPerPageOptions={[5, 8, 10]}
+            component="div"
+            count={todos.length}
+            rowsPerPage={rowsPerPage}
+            page={page}
+            onPageChange={handleChangePage}
+            onRowsPerPageChange={handleChangeRowsPerPage}
+          />
+        </TableContainer>
+      )}
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+      >
         <DialogTitle>Delete Todo</DialogTitle>
         <DialogContent>
           <DialogContentText>
@@ -169,7 +182,7 @@ const TodoList = ({ todos, onToggleComplete, onDelete, onUpdate }) => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog} sx={{ color: grey[500] }}>
+          <Button onClick={handleCloseDialog} color="inherit" sx={{ color: grey[500] }}>
             Cancel
           </Button>
           <Button onClick={handleConfirmDelete} color="error">
